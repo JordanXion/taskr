@@ -28,10 +28,16 @@ type Task = {
 
 function fmt(date: string | null) {
   if (!date) return "—";
-  return new Date(date).toLocaleString("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-    hour: "numeric", minute: "2-digit",
-  });
+  const d = new Date(date);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    + " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function fmtShort(date: string | null) {
+  if (!date) return "—";
+  const d = new Date(date);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    + " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
 function StatCard({ label, value }: { label: string; value: number | undefined }) {
@@ -235,16 +241,25 @@ export default function AdminClient({ adminName }: { adminName: string }) {
                 </div>
               ) : (
                 <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm table-fixed">
+                    <colgroup>
+                      <col className="w-[14%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[13%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[13%]" />
+                      <col className="w-[8%]" />
+                    </colgroup>
                     <thead>
                       <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wide">
-                        <th className="px-4 py-3 text-left font-medium">Name</th>
-                        <th className="px-4 py-3 text-left font-medium">Email</th>
-                        <th className="px-4 py-3 text-left font-medium">Signed Up</th>
-                        <th className="px-4 py-3 text-left font-medium">Signup IP</th>
-                        <th className="px-4 py-3 text-left font-medium">Last Access</th>
-                        <th className="px-4 py-3 text-left font-medium">Last IP</th>
-                        <th className="px-4 py-3 text-right font-medium">Tasks</th>
+                        <th className="px-3 py-3 text-left font-medium">Name</th>
+                        <th className="px-3 py-3 text-left font-medium">Email</th>
+                        <th className="px-3 py-3 text-left font-medium">Signed Up</th>
+                        <th className="px-3 py-3 text-left font-medium">Signup IP</th>
+                        <th className="px-3 py-3 text-left font-medium">Last Access</th>
+                        <th className="px-3 py-3 text-left font-medium">Last IP</th>
+                        <th className="px-3 py-3 text-right font-medium">Tasks</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800/60">
@@ -254,20 +269,20 @@ export default function AdminClient({ adminName }: { adminName: string }) {
                           onClick={() => setSelectedUser(user)}
                           className="hover:bg-zinc-800/40 cursor-pointer transition-colors"
                         >
-                          <td className="px-4 py-3 text-zinc-200 font-medium">
-                            <div className="flex items-center gap-2">
-                              {user.name}
+                          <td className="px-3 py-3 text-zinc-200 font-medium truncate">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="truncate">{user.name}</span>
                               {user.role === "admin" && (
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-violet-600/20 border border-violet-500/30 text-violet-400">admin</span>
+                                <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-violet-600/20 border border-violet-500/30 text-violet-400">admin</span>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-zinc-400">{user.email}</td>
-                          <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">{fmt(user.createdAt)}</td>
-                          <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{user.signupIp ?? "—"}</td>
-                          <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">{fmt(user.lastAccessAt)}</td>
-                          <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{user.lastAccessIp ?? "—"}</td>
-                          <td className="px-4 py-3 text-zinc-400 text-right">{user._count.todos}</td>
+                          <td className="px-3 py-3 text-zinc-400 truncate">{user.email}</td>
+                          <td className="px-3 py-3 text-zinc-400 text-xs whitespace-nowrap">{fmtShort(user.createdAt)}</td>
+                          <td className="px-3 py-3 text-zinc-500 font-mono text-xs truncate">{user.signupIp ?? "—"}</td>
+                          <td className="px-3 py-3 text-zinc-400 text-xs whitespace-nowrap">{fmtShort(user.lastAccessAt)}</td>
+                          <td className="px-3 py-3 text-zinc-500 font-mono text-xs truncate">{user.lastAccessIp ?? "—"}</td>
+                          <td className="px-3 py-3 text-zinc-400 text-right">{user._count.todos}</td>
                         </tr>
                       ))}
                     </tbody>
