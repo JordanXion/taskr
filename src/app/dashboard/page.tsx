@@ -15,6 +15,7 @@ type Task = {
 type TaskList = {
   id: string;
   name: string;
+  isDefault: boolean;
 };
 
 type User = {
@@ -256,12 +257,14 @@ function EditListModal({
   list,
   isDefault,
   onSave,
+  onSetDefault,
   onDeleteRequest,
   onCancel,
 }: {
   list: TaskList;
   isDefault: boolean;
   onSave: (id: string, name: string) => void;
+  onSetDefault: (id: string) => void;
   onDeleteRequest: (list: TaskList) => void;
   onCancel: () => void;
 }) {
@@ -280,6 +283,27 @@ function EditListModal({
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-1.5">Name</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoFocus className={inputClass} />
+        </div>
+
+        {/* Default section */}
+        <div className="rounded-xl border border-zinc-800 p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-zinc-200">Default List</p>
+            <p className="text-xs text-zinc-500 mt-0.5">New tasks are assigned here by default</p>
+          </div>
+          {isDefault ? (
+            <span className="px-3 py-1.5 text-xs font-medium text-violet-300 bg-violet-600/20 border border-violet-500/30 rounded-lg">
+              Default
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onSetDefault(list.id)}
+              className="px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium rounded-lg transition-all"
+            >
+              Set as Default
+            </button>
+          )}
         </div>
 
         {/* Delete section */}
@@ -480,6 +504,13 @@ export default function DashboardPage() {
     if (!res.ok) fetchData();
   }
 
+  async function handleSetDefaultList(id: string) {
+    setEditingList(null);
+    setLists((prev) => prev.map((l) => ({ ...l, isDefault: l.id === id })));
+    const res = await fetch("/api/lists", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, isDefault: true }) });
+    if (!res.ok) fetchData();
+  }
+
   async function handleDeleteList(list: TaskList, moveToListId: string | null) {
     setDeletingList(null);
     setEditingList(null);
@@ -516,7 +547,7 @@ export default function DashboardPage() {
     );
   }
 
-  const defaultListId = lists[0]?.id ?? "";
+  const defaultListId = (lists.find((l) => l.isDefault) ?? lists[0])?.id ?? "";
   const visibleTasks = selectedListId === null ? tasks : tasks.filter((t) => t.listId === selectedListId);
   const completedCount = visibleTasks.filter((t) => t.completed).length;
   const addModalDefaultList = selectedListId ?? defaultListId;
@@ -705,8 +736,9 @@ export default function DashboardPage() {
       {editingList && (
         <EditListModal
           list={editingList}
-          isDefault={editingList.id === defaultListId}
+          isDefault={editingList.isDefault}
           onSave={handleSaveList}
+          onSetDefault={handleSetDefaultList}
           onDeleteRequest={(list) => { setEditingList(null); setDeletingList(list); }}
           onCancel={() => setEditingList(null)}
         />

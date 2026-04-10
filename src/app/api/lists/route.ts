@@ -23,25 +23,43 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(list);
 }
 
-// Rename list
+// Rename list or set as default
 export async function PATCH(request: NextRequest) {
   const userId = await getUserId(request);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name } = await request.json();
-  if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  const { id, name, isDefault } = await request.json();
 
   const list = await prisma.list.findUnique({ where: { id } });
   if (!list || list.userId !== userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const updated = await prisma.list.update({
-    where: { id },
-    data: { name: name.trim() },
-  });
+  if (isDefault === true) {
+    // Flip default in a transaction: clear all, set this one
+    const [, updated] = await prisma.$transaction([
+      prisma.list.updateMany({
+        where: { userId, isDefault: true },
+        data: { isDefault: false },
+      }),
+      prisma.list.update({
+        where: { id },
+        data: { isDefault: true },
+      }),
+    ]);
+    return NextResponse.json(updated);
+  }
 
-  return NextResponse.json(updated);
+  if (name !== undefined) {
+    if (!name.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
+    const updated = await prisma.list.update({
+      where: { id },
+      data: { name: name.trim() },
+    });
+    return NextResponse.json(updated);
+  }
+
+  return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 }
 
 // Delete list — moveToListId moves tasks, otherwise deletes them

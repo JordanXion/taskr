@@ -29,9 +29,16 @@ export async function GET(request: NextRequest) {
 
   if (lists.length === 0) {
     const defaultList = await prisma.list.create({
-      data: { name: "Default List", userId: user.id },
+      data: { name: "Default List", userId: user.id, isDefault: true },
     });
     lists = [defaultList];
+  } else if (!lists.some((l) => l.isDefault)) {
+    // Self-heal: no default set (pre-migration user), promote the first list
+    await prisma.list.update({
+      where: { id: lists[0].id },
+      data: { isDefault: true },
+    });
+    lists[0].isDefault = true;
   }
 
   const todos = await prisma.todo.findMany({
