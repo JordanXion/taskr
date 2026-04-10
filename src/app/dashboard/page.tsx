@@ -561,7 +561,7 @@ export default function DashboardPage() {
               <div key={list.id} className="group relative">
                 <button
                   onClick={() => setSelectedListId(list.id)}
-                  className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all text-left pr-8 ${
+                  className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                     selectedListId === list.id ? "bg-violet-600/20 text-violet-300" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
                   }`}
                 >
@@ -570,16 +570,6 @@ export default function DashboardPage() {
                   </svg>
                   <span className="truncate">{list.name}</span>
                   <span className="ml-auto text-xs text-zinc-500 shrink-0">{tasks.filter((t) => t.listId === list.id).length}</span>
-                </button>
-                {/* Edit button */}
-                <button
-                  onClick={() => setEditingList(list)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-0.5 text-zinc-600 hover:text-zinc-300 transition-all"
-                  title="Edit list"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
-                  </svg>
                 </button>
               </div>
             ))}
@@ -604,15 +594,25 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-zinc-200">
               {selectedListId === null ? "All Tasks" : lists.find((l) => l.id === selectedListId)?.name ?? "Tasks"}
             </h2>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-xl transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Task
-            </button>
+            <div className="flex items-center gap-2">
+              {selectedListId !== null && (
+                <button
+                  onClick={() => setEditingList(lists.find((l) => l.id === selectedListId) ?? null)}
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-all duration-200"
+                >
+                  Edit List
+                </button>
+              )}
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-xl transition-all duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Task
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -631,10 +631,15 @@ export default function DashboardPage() {
                 const listName = lists.find((l) => l.id === task.listId)?.name;
                 return (
                   <div key={task.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
-                    <div className="group flex items-center gap-3 p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl transition-all duration-200 hover:border-zinc-700">
+                    <div className="group relative flex items-center gap-3 p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl transition-all duration-200 hover:border-zinc-700 cursor-pointer" onClick={() => setEditingTask(task)}>
+                      {/* Edit overlay */}
+                      <div className="absolute inset-0 rounded-xl bg-zinc-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+                        <span className="text-sm font-medium text-zinc-200">Edit</span>
+                      </div>
+
                       <button
-                        onClick={() => handleToggle(task.id)}
-                        className={`flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center ${
+                        onClick={(e) => { e.stopPropagation(); handleToggle(task.id); }}
+                        className={`relative z-10 flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center ${
                           task.completed ? "bg-violet-600 border-violet-600 shadow-sm shadow-violet-600/30" : "border-zinc-600 hover:border-violet-500"
                         }`}
                       >
@@ -656,16 +661,6 @@ export default function DashboardPage() {
                       )}
 
                       {task.dueDate && !task.completed && <Countdown dueDate={task.dueDate} />}
-
-                      <button
-                        onClick={() => setEditingTask(task)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-zinc-300 transition-all duration-200 shrink-0"
-                        title="Edit task"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 );
