@@ -6,13 +6,13 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname === "/login" || pathname === "/register";
-  const isDashboard = pathname.startsWith("/dashboard");
+  const isProtected = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
 
-  if (isDashboard && !token) {
+  if (isProtected && !token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (isDashboard && token) {
+  if (isProtected && token) {
     const session = await verifyToken(token);
     if (!session) {
       const response = NextResponse.redirect(new URL("/login", request.url));
@@ -32,5 +32,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/admin", "/login", "/register"],
 };

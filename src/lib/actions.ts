@@ -2,10 +2,19 @@
 
 import { prisma } from "./db";
 import { createToken, getSession } from "./auth";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+
+async function getIp(): Promise<string | null> {
+  const hdrs = await headers();
+  return (
+    hdrs.get("x-forwarded-for")?.split(",")[0].trim() ??
+    hdrs.get("x-real-ip") ??
+    null
+  );
+}
 
 async function setCookie(token: string) {
   (await cookies()).set("token", token, {
@@ -39,8 +48,9 @@ export async function register(
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
+  const ip = await getIp();
   const user = await prisma.user.create({
-    data: { name: name.trim(), email, password: hashedPassword },
+    data: { name: name.trim(), email, password: hashedPassword, signupIp: ip },
   });
 
   const token = await createToken(user.id);

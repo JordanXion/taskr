@@ -9,13 +9,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  todos     Todo[]
-  lists     List[]
-  createdAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  password       String
+  role           String    @default("user")
+  signupIp       String?
+  lastAccessAt   DateTime?
+  lastAccessIp   String?
+  todos          Todo[]
+  lists          List[]
+  createdAt      DateTime  @default(now())
 }
 
 model List {
@@ -26,6 +30,11 @@ model List {
   userId    String
   todos     Todo[]
   createdAt DateTime @default(now())
+}
+
+model AppStats {
+  id                Int @id @default(1)
+  totalTasksCreated Int @default(0)
 }
 
 model Todo {

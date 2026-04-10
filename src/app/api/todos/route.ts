@@ -18,14 +18,21 @@ export async function POST(request: NextRequest) {
   const { title, dueDate, listId } = await request.json();
   if (!title?.trim()) return NextResponse.json({ error: "Title required" }, { status: 400 });
 
-  const todo = await prisma.todo.create({
-    data: {
-      title: title.trim(),
-      userId,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      listId: listId ?? null,
-    },
-  });
+  const [todo] = await prisma.$transaction([
+    prisma.todo.create({
+      data: {
+        title: title.trim(),
+        userId,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        listId: listId ?? null,
+      },
+    }),
+    prisma.appStats.upsert({
+      where: { id: 1 },
+      create: { id: 1, totalTasksCreated: 1 },
+      update: { totalTasksCreated: { increment: 1 } },
+    }),
+  ]);
 
   return NextResponse.json(todo);
 }

@@ -22,6 +22,7 @@ type User = {
   id: string;
   name: string;
   email: string;
+  role: string;
 };
 
 // --------------- Countdown ---------------
@@ -559,6 +560,11 @@ export default function DashboardPage() {
         <div className="px-6 h-16 flex items-center justify-between">
           <h1 className="text-xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">Taskr</h1>
           <div className="flex items-center gap-4">
+            {user?.role === "admin" && (
+              <a href="/admin" className="text-sm px-3 py-1.5 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 font-medium rounded-lg transition-all">
+                Admin
+              </a>
+            )}
             <span className="text-sm text-zinc-400">Hey, <span className="text-zinc-200">{user?.name}</span></span>
             <button onClick={handleLogout} className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors">Sign out</button>
           </div>

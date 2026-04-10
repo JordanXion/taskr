@@ -13,14 +13,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    request.headers.get("x-real-ip") ??
+    null;
+
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, role: true },
   });
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
+
+  // Update last access — fire and forget, don't block the response
+  prisma.user.update({
+    where: { id: session.userId },
+    data: { lastAccessAt: new Date(), lastAccessIp: ip },
+  }).catch(() => {});
 
   let lists = await prisma.list.findMany({
     where: { userId: user.id },
